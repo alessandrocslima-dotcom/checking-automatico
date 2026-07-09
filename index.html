@@ -449,6 +449,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
     <div class="divider"></div>
 
+    <div class="field">
+      <label for="campo_link_fotos">Link de fotos <span style="font-weight:400;color:var(--ink-soft)">(opcional)</span></label>
+      <input type="text" id="campo_link_fotos" placeholder="Cole o link do SharePoint aqui">
+    </div>
+
     <div class="dropzone" id="dropzone">
       <strong>Arraste as fotos aqui</strong>
       <span>ou clique para escolher (jpg, png)</span>
@@ -715,6 +720,8 @@ function renderPhotoList(){
     animation: 150,
     ghostClass: 'dragging',
     chosenClass: 'drag-over',
+    filter: '.rm',           // ignora cliques no botão × — deixa o click chegar ao handler
+    preventOnFilter: false,  // permite que o evento original do × seja disparado normalmente
     onEnd(evt){
       if(evt.oldIndex === evt.newIndex) return;
       const moved = photos.splice(evt.oldIndex, 1)[0];
@@ -1062,6 +1069,7 @@ function getAssuntoEmail(){
 
 function getCorpoEmail(){
   const numEvento = document.getElementById('campo_num_evento').value.trim();
+  const linkFotos = document.getElementById('campo_link_fotos') ? document.getElementById('campo_link_fotos').value.trim() : '';
   // pegar campo data do perfil atual
   const profile = PROFILES[currentCompany];
   const dataField = profile.fields.find(f => f.toLowerCase().includes('data'));
@@ -1075,6 +1083,7 @@ function getCorpoEmail(){
   corpo += `Encaminho o fechamento do evento conforme informações abaixo:%0D%0A%0D%0A`;
   if(numEvento) corpo += `Número do Evento: ${numEvento}%0D%0A`;
   if(dataEvento) corpo += `Data do Evento: ${dataEvento}%0D%0A`;
+  if(linkFotos) corpo += `Link de Fotos: ${encodeURIComponent(linkFotos)}%0D%0A`;
   corpo += `%0D%0AAtenciosamente,`;
   return corpo;
 }
