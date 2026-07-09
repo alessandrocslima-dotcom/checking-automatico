@@ -221,20 +221,26 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   }
   .photo-thumb .rm{
     position:absolute;
-    top:3px;
-    right:3px;
-    width:16px;
-    height:16px;
+    top:4px;
+    right:4px;
+    width:20px;
+    height:20px;
     border-radius:50%;
-    background:rgba(0,0,0,.55);
+    background:rgba(220,50,50,.85);
     color:#fff;
     border:none;
-    font-size:11px;
-    line-height:16px;
+    font-size:13px;
+    line-height:20px;
     text-align:center;
     cursor:pointer;
     padding:0;
+    z-index:10;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
   }
+  .photo-thumb .rm:hover{background:rgba(200,30,30,1);}
   .photo-thumb.excess{opacity:.35;}
   .photo-thumb{cursor:grab;}
   .photo-thumb.dragging{opacity:.35; cursor:grabbing;}
@@ -381,6 +387,34 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     background:#fff;
   }
 
+  #update-banner{
+    display:none;
+    position:fixed;
+    bottom:16px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--ink);
+    color:#fff;
+    font-size:13px;
+    padding:10px 16px;
+    border-radius:8px;
+    z-index:9999;
+    align-items:center;
+    gap:12px;
+    white-space:nowrap;
+    box-shadow:0 4px 12px rgba(0,0,0,.2);
+  }
+  #update-banner.show{display:flex;}
+  #update-banner button{
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    border-radius:5px;
+    padding:5px 10px;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+  }
   @media (max-width: 860px){
     .app{flex-direction:column;}
     .panel-left{width:100%; max-width:none; border-right:none; border-bottom:1px solid var(--line);}
@@ -458,6 +492,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </div>
     <div id="pagesContainer"></div>
   </div>
+</div>
+
+<div id="update-banner">
+  Nova versão disponível
+  <button onclick="atualizarApp()">Atualizar agora</button>
 </div>
 
 <script>/*! Sortable 1.15.7 - MIT | git://github.com/SortableJS/Sortable.git */
@@ -1004,11 +1043,11 @@ function getNomeArquivo(){
   const numEvento = document.getElementById('campo_num_evento').value.trim();
   const nomeEvento = document.getElementById('campo_evento') ? document.getElementById('campo_evento').value.trim() : '';
   // formato: [numero] - Checking [nome do evento].docx
-  const partes = [];
-  if(numEvento) partes.push(numEvento);
-  partes.push('Checking');
-  if(nomeEvento) partes.push(nomeEvento);
-  return partes.join(' ') + '.docx';
+  let nome = '';
+  if(numEvento) nome += numEvento + ' - ';
+  nome += 'Checking';
+  if(nomeEvento) nome += ' ' + nomeEvento;
+  return nome + '.docx';
 }
 
 function getAssuntoEmail(){
@@ -1134,10 +1173,38 @@ renderPhotoList();
 renderPreview();
 </script>
 <script>
+let swRegistration = null;
+
+function atualizarApp(){
+  if(swRegistration && swRegistration.waiting){
+    swRegistration.waiting.postMessage('skipWaiting');
+  }
+  window.location.reload();
+}
+
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('./sw.js')
-    .then(()=>console.log('Service Worker registrado'))
-    .catch(e=>console.warn('SW falhou:', e));
+  navigator.serviceWorker.register('./sw.js').then(reg => {
+    swRegistration = reg;
+
+    // Verifica se já tem uma atualização esperando
+    if(reg.waiting) document.getElementById('update-banner').classList.add('show');
+
+    // Detecta nova versão quando o usuário já está usando o app
+    reg.addEventListener('updatefound', () => {
+      const newWorker = reg.installing;
+      newWorker.addEventListener('statechange', () => {
+        if(newWorker.state === 'installed' && navigator.serviceWorker.controller){
+          swRegistration = reg;
+          document.getElementById('update-banner').classList.add('show');
+        }
+      });
+    });
+  }).catch(e => console.warn('SW falhou:', e));
+
+  // Recarrega automaticamente quando o novo SW assume o controle
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload();
+  });
 }
 </script>
 </body>
