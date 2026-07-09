@@ -191,7 +191,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     display:grid;
     grid-template-columns:repeat(3, 1fr);
     gap:8px;
-    max-height:260px;
+    max-height:360px;
     overflow-y:auto;
     padding-right:2px;
   }
@@ -393,6 +393,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     align-items:center;
     justify-content:space-between;
     gap:12px;
+    margin:-28px -24px 16px -24px;
   }
   #update-banner.show{display:flex;}
   #update-banner button{
@@ -419,7 +420,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div class="panel-left">
     
     <div>
-      <div id="update-banner">
+      <div id="update-banner" style="display:none">
       <span>🆕 Nova versão disponível</span>
       <button onclick="atualizarApp()">Atualizar agora</button>
     </div>
