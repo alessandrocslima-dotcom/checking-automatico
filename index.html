@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Checking">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checking — Registro de Evento</title>
 <script>/*!
@@ -195,14 +195,32 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     overflow-y:auto;
     padding-right:2px;
   }
+
+  .photo-thumb .idx{
+    position:absolute;
+    top:3px;
+    left:3px;
+    background:rgba(0,0,0,.55);
+    color:#fff;
+    font-family:var(--mono);
+    font-size:9px;
+    padding:1px 4px;
+    border-radius:3px;
+  }
   .photo-thumb{
-    position:relative;
+    display:flex;
+    flex-direction:column;
     border-radius:6px;
     overflow:hidden;
+    border:0.5px solid var(--line);
+  }
+  .photo-thumb .thumb-img{
+    position:relative;
     aspect-ratio:1;
     background:var(--line);
+    overflow:hidden;
   }
-  .photo-thumb img{
+  .photo-thumb .thumb-img img{
     width:100%;
     height:100%;
     object-fit:cover;
@@ -220,29 +238,19 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     border-radius:3px;
   }
   .photo-thumb .rm{
-    position:absolute;
-    top:4px;
-    right:4px;
-    width:22px;
-    height:22px;
-    border-radius:50%;
-    background:rgba(220,50,50,.9);
-    color:#fff;
-    border:2px solid #fff;
-    font-size:14px;
-    line-height:18px;
+    width:100%;
+    background:#fee2e2;
+    color:#dc2626;
+    border:none;
+    border-top:0.5px solid #fecaca;
+    padding:4px 0;
+    font-size:11px;
+    font-weight:700;
+    cursor:pointer;
     text-align:center;
-    cursor:pointer !important;
-    padding:0;
-    z-index:100;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight:900;
-    touch-action:none;
-    pointer-events:all !important;
   }
-  .photo-thumb .rm:hover{background:rgba(200,0,0,1); transform:scale(1.1);}
+  .photo-thumb .rm:hover{background:#fecaca;}
+  .photo-thumb.excess{opacity:.35;}
   .photo-thumb.excess{opacity:.35;}
   .photo-thumb{cursor:grab;}
   .photo-thumb.dragging{opacity:.35; cursor:grabbing;}
@@ -391,31 +399,25 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
   #update-banner{
     display:none;
-    position:fixed;
-    bottom:16px;
-    left:50%;
-    transform:translateX(-50%);
-    background:var(--ink);
+    background:#E0662B;
     color:#fff;
     font-size:13px;
     padding:10px 16px;
-    border-radius:8px;
-    z-index:9999;
     align-items:center;
+    justify-content:space-between;
     gap:12px;
-    white-space:nowrap;
-    box-shadow:0 4px 12px rgba(0,0,0,.2);
   }
   #update-banner.show{display:flex;}
   #update-banner button{
-    background:var(--accent);
-    color:#fff;
+    background:#fff;
+    color:#E0662B;
     border:none;
     border-radius:5px;
     padding:5px 10px;
     font-size:12px;
     font-weight:700;
     cursor:pointer;
+    white-space:nowrap;
   }
   @media (max-width: 860px){
     .app{flex-direction:column;}
@@ -430,7 +432,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div class="panel-left">
     
     <div>
-      <h1>Checking — Registro de Evento</h1>
+      <div id="update-banner">
+      <span>🆕 Nova versão disponível</span>
+      <button onclick="atualizarApp()">Atualizar agora</button>
+    </div>
+    <h1>Checking — Registro de Evento</h1>
       
     </div>
 
@@ -475,12 +481,12 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       </button>
     </div>
 
-    <div class="note">
-      <b>Isso é um protótipo funcional</b>, não a ferramenta final. O .docx
-      gerado aqui já é um Word de verdade, com cabeçalho e rodapé
-      repetindo em todas as páginas automaticamente — igual ao template
-      original de cada empresa (2 fotos por página, ordem aleatória,
-      limite de 16).
+    <div style="border-top:1px solid var(--line);padding-top:16px;text-align:center;">
+      <p style="font-size:11px;color:var(--ink-soft);margin:0;line-height:1.9;">
+        Desenvolvido por<br>
+        <span style="font-size:12px;font-weight:700;color:var(--ink);">Alessandro Lima</span><br>
+        © 2026 · Todos os direitos reservados
+      </p>
     </div>
   </div>
 
@@ -494,11 +500,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </div>
     <div id="pagesContainer"></div>
   </div>
-</div>
-
-<div id="update-banner">
-  Nova versão disponível
-  <button onclick="atualizarApp()">Atualizar agora</button>
 </div>
 
 <script>/*! Sortable 1.15.7 - MIT | git://github.com/SortableJS/Sortable.git */
@@ -703,32 +704,23 @@ function renderPhotoList(){
     const div = document.createElement('div');
     div.className = 'photo-thumb' + (idx>=MAX_FOTOS ? ' excess' : '');
     div.dataset.idx = idx;
-    div.innerHTML = `<img src="${p.dataUrl}" alt="">
-      <span class="idx">${idx+1}</span>
-      <button class="rm" title="Remover" data-idx="${idx}">×</button>`;
+    div.innerHTML = `<div class="thumb-img">
+        <img src="${p.dataUrl}" alt="">
+        <span class="idx">${idx+1}</span>
+      </div>
+      <button class="rm" data-idx="${idx}">✕ remover</button>`;
     photoList.appendChild(div);
   });
 
   photoList.querySelectorAll('.rm').forEach(btn=>{
-    btn.addEventListener('click', e=>{
-      e.stopPropagation();
-      e.preventDefault();
-      removePhoto(parseInt(btn.dataset.idx));
-    });
-    // também captura no touchend para mobile
-    btn.addEventListener('touchend', e=>{
-      e.stopPropagation();
-      e.preventDefault();
-      removePhoto(parseInt(btn.dataset.idx));
-    });
+    btn.addEventListener('click', ()=>removePhoto(parseInt(btn.dataset.idx)));
   });
 
   sortableInstance = new Sortable(photoList, {
     animation: 150,
     ghostClass: 'dragging',
     chosenClass: 'drag-over',
-    filter: '.rm',           // ignora cliques no botão × — deixa o click chegar ao handler
-    preventOnFilter: false,  // permite que o evento original do × seja disparado normalmente
+
     onEnd(evt){
       if(evt.oldIndex === evt.newIndex) return;
       const moved = photos.splice(evt.oldIndex, 1)[0];
