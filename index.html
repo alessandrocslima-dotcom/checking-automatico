@@ -406,6 +406,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       </div>
     </div>
 
+    <div class="field">
+      <label for="campo_num_evento">Número do evento</label>
+      <input type="text" id="campo_num_evento" placeholder="ex: VI 153.26 GAB">
+    </div>
+
     <div id="fieldsContainer"></div>
 
     <div class="divider"></div>
@@ -423,7 +428,16 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
     <div class="photo-list" id="photoList"></div>
 
-    <button class="primary-btn" id="downloadBtn" disabled>⬇ Baixar .docx</button>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <button class="primary-btn" id="saveBtn" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Salvar .docx
+      </button>
+      <button class="primary-btn" id="emailBtn" disabled style="background:var(--graphite);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        Enviar por email
+      </button>
+    </div>
 
     <div class="note">
       <b>Isso é um protótipo funcional</b>, não a ferramenta final. O .docx
@@ -489,7 +503,8 @@ const fileInput = document.getElementById('fileInput');
 const photoList = document.getElementById('photoList');
 const countBadge = document.getElementById('countBadge');
 const shuffleBtn = document.getElementById('shuffleBtn');
-const downloadBtn = document.getElementById('downloadBtn');
+const saveBtn = document.getElementById('saveBtn');
+const emailBtn = document.getElementById('emailBtn');
 const pagesContainer = document.getElementById('pagesContainer');
 const emptyState = document.getElementById('emptyState');
 const pageCountEl = document.getElementById('pageCount');
@@ -679,7 +694,8 @@ function renderPhotoList(){
   countBadge.textContent = photos.length;
   countBadge.classList.toggle('over', photos.length>MAX_FOTOS);
   document.getElementById('maxBadge').textContent = MAX_FOTOS;
-  downloadBtn.disabled = photos.length===0;
+  saveBtn.disabled = photos.length===0;
+  emailBtn.disabled = photos.length===0;
 }
 
 function getFieldValues(){
@@ -983,35 +999,135 @@ ${Array.from(contentTypeExts).map(ext=>`<Default Extension="${ext}" ContentType=
   return blob;
 }
 
-downloadBtn.addEventListener('click', async ()=>{
-  downloadBtn.disabled = true;
-  downloadBtn.textContent = 'Gerando...';
+// ---- helpers de nome de arquivo e email ----
+function getNomeArquivo(){
+  const numEvento = document.getElementById('campo_num_evento').value.trim();
+  const nomeEvento = document.getElementById('campo_evento') ? document.getElementById('campo_evento').value.trim() : '';
+  // formato: [numero] - Checking [nome do evento].docx
+  const partes = [];
+  if(numEvento) partes.push(numEvento);
+  partes.push('Checking');
+  if(nomeEvento) partes.push(nomeEvento);
+  return partes.join(' ') + '.docx';
+}
+
+function getAssuntoEmail(){
+  const numEvento = document.getElementById('campo_num_evento').value.trim();
+  const nomeEvento = document.getElementById('campo_evento') ? document.getElementById('campo_evento').value.trim() : '';
+  const partes = [];
+  if(numEvento) partes.push(numEvento);
+  if(nomeEvento) partes.push(nomeEvento);
+  partes.push('FECHAMENTO');
+  return partes.join(' - ');
+}
+
+function getCorpoEmail(){
+  const numEvento = document.getElementById('campo_num_evento').value.trim();
+  // pegar campo data do perfil atual
+  const profile = PROFILES[currentCompany];
+  const dataField = profile.fields.find(f => f.toLowerCase().includes('data'));
+  const dataId = dataField ? 'campo_' + slugify(dataField) : null;
+  const dataEvento = dataId && document.getElementById(dataId) ? document.getElementById(dataId).value.trim() : '';
+
+  const hora = new Date().getHours();
+  const saudacao = hora < 12 ? 'bom dia' : hora < 18 ? 'boa tarde' : 'boa noite';
+
+  let corpo = `Prezados, ${saudacao}.%0D%0A%0D%0A`;
+  corpo += `Encaminho o fechamento do evento conforme informações abaixo:%0D%0A%0D%0A`;
+  if(numEvento) corpo += `Número do Evento: ${numEvento}%0D%0A`;
+  if(dataEvento) corpo += `Data do Evento: ${dataEvento}%0D%0A`;
+  corpo += `%0D%0AAtenciosamente,`;
+  return corpo;
+}
+
+async function gerarBlob(){
+  const blob = await buildDocx();
+  await JSZip.loadAsync(blob);
+  return blob;
+}
+
+function baixarBlob(blob, nomeArquivo){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nomeArquivo;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 4000);
+}
+
+// ---- botão Salvar .docx ----
+saveBtn.addEventListener('click', async ()=>{
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Gerando...';
   try{
-    const blob = await buildDocx();
+    const nomeArquivo = getNomeArquivo();
+    const blob = await gerarBlob();
 
-    // Verificacao de sanidade: reabre o proprio zip gerado antes de baixar,
-    // pra garantir que o arquivo nao saiu corrompido.
-    await JSZip.loadAsync(blob);
-
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'checking-' + currentCompany + '.docx';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    // IMPORTANTE: nao revogar a URL na hora — em alguns navegadores isso
-    // acontece antes do download terminar de gravar, corrompendo o arquivo.
-    // Espera um pouco antes de liberar a memoria.
-    setTimeout(()=>URL.revokeObjectURL(url), 4000);
-
+    // Tenta abrir janela "Salvar como" (Chrome/Edge)
+    if(window.showSaveFilePicker){
+      try{
+        const fileHandle = await window.showSaveFilePicker({
+          suggestedName: nomeArquivo,
+          types:[{description:'Documento Word', accept:{'application/vnd.openxmlformats-officedocument.wordprocessingml.document':['.docx']}}]
+        });
+        const writable = await fileHandle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+      }catch(pickerErr){
+        if(pickerErr.name !== 'AbortError') baixarBlob(blob, nomeArquivo);
+      }
+    } else {
+      // fallback: Downloads normal
+      baixarBlob(blob, nomeArquivo);
+    }
   }catch(err){
-    alert('Erro ao gerar o documento: ' + err.message + '\n\nTenta gerar de novo — se persistir, me avisa.');
+    alert('Erro ao gerar o documento: ' + err.message);
     console.error(err);
   }
-  downloadBtn.disabled = false;
-  downloadBtn.textContent = '⬇ Baixar .docx';
+  saveBtn.disabled = false;
+  saveBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar .docx';
 });
+
+// ---- botão Enviar por email ----
+emailBtn.addEventListener('click', async ()=>{
+  emailBtn.disabled = true;
+  emailBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg> Gerando...';
+  try{
+    const nomeArquivo = getNomeArquivo();
+    const blob = await gerarBlob();
+
+    // 1. salvar o arquivo primeiro
+    if(window.showSaveFilePicker){
+      try{
+        const fileHandle = await window.showSaveFilePicker({
+          suggestedName: nomeArquivo,
+          types:[{description:'Documento Word', accept:{'application/vnd.openxmlformats-officedocument.wordprocessingml.document':['.docx']}}]
+        });
+        const writable = await fileHandle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+      }catch(pickerErr){
+        if(pickerErr.name !== 'AbortError') baixarBlob(blob, nomeArquivo);
+      }
+    } else {
+      baixarBlob(blob, nomeArquivo);
+    }
+
+    // 2. abrir Outlook com campos preenchidos
+    const assunto = encodeURIComponent(getAssuntoEmail());
+    const corpo = getCorpoEmail();
+    window.location.href = `mailto:?subject=${assunto}&body=${corpo}`;
+
+  }catch(err){
+    alert('Erro: ' + err.message);
+    console.error(err);
+  }
+  emailBtn.disabled = false;
+  emailBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg> Enviar por email';
+});
+
 
 renderFields();
 renderPhotoList();
