@@ -907,8 +907,9 @@ ${Array.from(contentTypeExts).map(ext=>`<Default Extension="${ext}" ContentType=
 
 // ---- helpers de nome de arquivo e email ----
 function getNomeArquivo(){
-  const numEvento = document.getElementById('f-numero').value.trim();
-  const nomeEvento = document.getElementById('f-evento') ? document.getElementById('f-evento').value.trim() : '';
+  const numEvento = document.getElementById('f-numero') ? document.getElementById('f-numero').value.trim() : '';
+  const elEvento = document.getElementById('campo_evento') || document.getElementById('f-evento');
+  const nomeEvento = elEvento ? elEvento.value.trim() : '';
   // formato: [numero] - Checking [nome do evento].docx
   let nome = '';
   if(numEvento) nome += numEvento + ' - ';
@@ -918,8 +919,9 @@ function getNomeArquivo(){
 }
 
 function getAssuntoEmail(){
-  const numEvento = document.getElementById('f-numero').value.trim();
-  const nomeEvento = document.getElementById('f-evento') ? document.getElementById('f-evento').value.trim() : '';
+  const numEvento = document.getElementById('f-numero') ? document.getElementById('f-numero').value.trim() : '';
+  const elEvento = document.getElementById('campo_evento') || document.getElementById('f-evento');
+  const nomeEvento = elEvento ? elEvento.value.trim() : '';
   const partes = [];
   if(numEvento) partes.push(numEvento);
   if(nomeEvento) partes.push(nomeEvento);
@@ -928,7 +930,7 @@ function getAssuntoEmail(){
 }
 
 function getCorpoEmail(){
-  const numEvento = document.getElementById('f-numero').value.trim();
+  const numEvento = document.getElementById('f-numero') ? document.getElementById('f-numero').value.trim() : '';
   const linkFotos = '';  // campo preenchido manualmente no Outlook após abrir o email
   // pegar campo data do perfil atual
   const profile = PROFILES[currentCompany];
