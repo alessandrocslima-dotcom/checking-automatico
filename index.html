@@ -422,8 +422,18 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   }
   @media (max-width: 860px){
     .app{flex-direction:column;}
-    .panel-left{width:100%; max-width:none; border-right:none; border-bottom:1px solid var(--line);}
-    .a4-page, .empty-state, .preview-header{width:min(560px, 92vw);}
+    .panel-left{width:100%;max-width:none;border-right:none;border-bottom:none;padding:16px 16px 100px;gap:14px;max-height:none;}
+    .panel-right{display:none;padding:16px;}
+    .panel-right.visible{display:flex;}
+    .a4-page,.empty-state,.preview-header{width:min(560px,92vw);}
+    .mobile-action-bar{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--line);padding:10px 12px;gap:8px;z-index:100;}
+    .mobile-action-bar .primary-btn{flex:1;padding:13px 8px;font-size:13px;}
+    .mobile-preview-toggle{display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;border:1px solid var(--line);border-radius:7px;background:var(--paper);font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;width:100%;}
+    .desktop-only{display:none !important;}
+  }
+  @media (min-width: 861px){
+    .mobile-action-bar{display:none;}
+    .mobile-preview-toggle{display:none;}
   }
 </style>
 </head>
@@ -458,11 +468,13 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
     <div class="divider"></div>
 
+    <button class="mobile-preview-toggle" id="previewToggle">👁 Ver pré-visualização</button>
+
     <div class="dropzone" id="dropzone">
       <strong>Arraste as fotos aqui</strong>
-      <span>ou clique para escolher (jpg, png)</span>
+      <span>ou clique para escolher (jpg, png, heic)</span>
     </div>
-    <input type="file" id="fileInput" multiple accept="image/*">
+    <input type="file" id="fileInput" multiple accept="image/*,.heic,.heif">
 
     <div class="photo-toolbar">
       <span><span class="count-badge" id="countBadge">0</span> fotos carregadas (máx. <span id="maxBadge">20</span>)</span>
@@ -471,7 +483,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
     <div class="photo-list" id="photoList"></div>
 
-    <div style="display:flex; flex-direction:column; gap:8px;">
+    <div style="display:flex; flex-direction:column; gap:8px;" class="desktop-only">
       <button class="primary-btn" id="saveBtn" disabled>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         Salvar .docx
@@ -487,7 +499,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         Desenvolvido por<br>
         <span style="font-size:12px;font-weight:700;color:var(--ink);">Alessandro Lima</span><br>
         © 2026 · Todos os direitos reservados<br>
-        <span style="font-size:10px;color:var(--ink-soft);font-family:var(--mono);">v1.0.2</span>
+        <span style="font-size:10px;color:var(--ink-soft);font-family:var(--mono);">v1.0.4</span>
       </p>
     </div>
   </div>
@@ -502,6 +514,17 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </div>
     <div id="pagesContainer"></div>
   </div>
+</div>
+
+<div class="mobile-action-bar">
+  <button class="primary-btn" id="saveBtnMobile" disabled>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    Salvar
+  </button>
+  <button class="primary-btn" id="emailBtnMobile" disabled style="background:var(--graphite);">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+    Email
+  </button>
 </div>
 
 <script>/*! Sortable 1.15.7 - MIT | git://github.com/SortableJS/Sortable.git */
@@ -743,6 +766,18 @@ function renderPhotoList(){
   document.getElementById('maxBadge').textContent = MAX_FOTOS;
   saveBtn.disabled = photos.length===0;
   emailBtn.disabled = photos.length===0;
+  const smob = document.getElementById('saveBtnMobile');
+  const emob = document.getElementById('emailBtnMobile');
+  if(smob) smob.disabled = photos.length===0;
+  if(emob) emob.disabled = photos.length===0;
+}
+
+function togglePreview(){
+  const panel = document.getElementById('panelRight');
+  const btn = document.getElementById('previewToggle');
+  const visible = panel.classList.toggle('visible');
+  btn.textContent = visible ? '✕ Fechar pré-visualização' : '👁 Ver pré-visualização';
+  if(visible) panel.scrollIntoView({behavior:'smooth'});
 }
 
 function getFieldValues(){
@@ -1181,6 +1216,9 @@ emailBtn.addEventListener('click', async ()=>{
 renderFields();
 renderPhotoList();
 renderPreview();
+document.getElementById('saveBtnMobile').addEventListener('click', ()=>document.getElementById('saveBtn').click());
+document.getElementById('emailBtnMobile').addEventListener('click', ()=>document.getElementById('emailBtn').click());
+document.getElementById('previewToggle').addEventListener('click', togglePreview);
 </script>
 <script>
 let swRegistration = null;
