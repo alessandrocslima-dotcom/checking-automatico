@@ -1,12 +1,10 @@
 const CACHE_NAME = 'checking-v1';
 const ASSETS = [
-  './index.html',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png'
 ];
 
-// Instala e faz cache de todos os assets
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
@@ -14,7 +12,6 @@ self.addEventListener('install', e => {
   self.skipWaiting();
 });
 
-// Remove caches antigos ao ativar nova versão
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
@@ -24,9 +21,38 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// Serve sempre do cache (offline first) — fallback para rede se não tiver
+// index.html: sempre busca da rede (nunca do cache)
+// para garantir que atualizações chegam imediatamente.
+// Demais assets: network first com fallback para cache.
 self.addEventListener('fetch', e => {
+  const url = new URL(e.request.url);
+  const isIndex = url.pathname.endsWith('/') ||
+                  url.pathname.endsWith('/index.html') ||
+                  url.pathname === url.pathname.split('/').slice(0,-1).join('/') + '/';
+
+  if(isIndex){
+    // index.html: sempre da rede, sem cache
+    e.respondWith(
+      fetch(e.request, { cache: 'no-store' })
+        .catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
+
+  // outros assets: network first
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
+    fetch(e.request)
+      .then(response => {
+        if(response && response.status === 200 && response.type === 'basic'){
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(e.request))
   );
+});
+
+self.addEventListener('message', e => {
+  if(e.data === 'skipWaiting') self.skipWaiting();
 });
