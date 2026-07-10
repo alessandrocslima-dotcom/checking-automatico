@@ -1,37 +1,37 @@
-const CACHE_NAME = 'checking-v1';
+const CACHE_NAME = 'checking-v2';
 const ASSETS = [
   './manifest.json',
   './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icons/icon-512.png',
+  './icons/icon-180.png'
 ];
 
+// Instala e faz cache dos assets estáticos
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
   );
+  // Ativa imediatamente sem esperar o tab fechar
   self.skipWaiting();
 });
 
+// Remove TODOS os caches antigos ao ativar
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    )
+      Promise.all(keys.map(k => caches.delete(k)))
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// index.html: sempre busca da rede (nunca do cache)
-// para garantir que atualizações chegam imediatamente.
-// Demais assets: network first com fallback para cache.
+// index.html: SEMPRE da rede, nunca do cache
+// Assets estáticos: cache first (ícones, manifest)
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
-  const isIndex = url.pathname.endsWith('/') ||
-                  url.pathname.endsWith('/index.html') ||
-                  url.pathname === url.pathname.split('/').slice(0,-1).join('/') + '/';
+  const isIndex = url.pathname.endsWith('/')
+               || url.pathname.endsWith('/index.html');
 
   if(isIndex){
-    // index.html: sempre da rede, sem cache
     e.respondWith(
       fetch(e.request, { cache: 'no-store' })
         .catch(() => caches.match('./index.html'))
@@ -39,17 +39,18 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // outros assets: network first
+  // Assets estáticos: cache first
   e.respondWith(
-    fetch(e.request)
-      .then(response => {
-        if(response && response.status === 200 && response.type === 'basic'){
+    caches.match(e.request).then(cached => {
+      if(cached) return cached;
+      return fetch(e.request).then(response => {
+        if(response && response.status === 200){
           const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+          caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
         }
         return response;
-      })
-      .catch(() => caches.match(e.request))
+      });
+    })
   );
 });
 
