@@ -488,10 +488,16 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         Salvar .docx
       </button>
-      <button class="primary-btn" id="emailBtn" disabled style="background:var(--graphite);">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-        Enviar por email
-      </button>
+      <div style="display:flex;gap:8px;">
+        <button class="primary-btn" id="emailBtn" disabled style="flex:1;background:#1A73E8;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          Email
+        </button>
+        <button class="primary-btn" id="whatsappBtn" disabled style="flex:1;background:#25D366;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          WhatsApp
+        </button>
+      </div>
     </div>
 
     <div style="border-top:1px solid var(--line);padding-top:16px;text-align:center;">
@@ -499,7 +505,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         Desenvolvido por<br>
         <span style="font-size:12px;font-weight:700;color:var(--ink);">Alessandro Lima</span><br>
         © 2026 · Todos os direitos reservados<br>
-        <span style="font-size:10px;color:var(--ink-soft);font-family:var(--mono);">v1.0.4</span>
+        <span style="font-size:10px;color:var(--ink-soft);font-family:var(--mono);">v1.0.5</span>
       </p>
     </div>
   </div>
@@ -518,12 +524,16 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
 <div class="mobile-action-bar">
   <button class="primary-btn" id="saveBtnMobile" disabled>
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
     Salvar
   </button>
-  <button class="primary-btn" id="emailBtnMobile" disabled style="background:var(--graphite);">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+  <button class="primary-btn" id="emailBtnMobile" disabled style="flex:1;background:#1A73E8;">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
     Email
+  </button>
+  <button class="primary-btn" id="whatsappBtnMobile" disabled style="flex:1;background:#25D366;">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+    WA
   </button>
 </div>
 
@@ -572,6 +582,7 @@ const countBadge = document.getElementById('countBadge');
 const shuffleBtn = document.getElementById('shuffleBtn');
 const saveBtn = document.getElementById('saveBtn');
 const emailBtn = document.getElementById('emailBtn');
+const whatsappBtn = document.getElementById('whatsappBtn');
 const pagesContainer = document.getElementById('pagesContainer');
 const emptyState = document.getElementById('emptyState');
 const pageCountEl = document.getElementById('pageCount');
@@ -766,10 +777,13 @@ function renderPhotoList(){
   document.getElementById('maxBadge').textContent = MAX_FOTOS;
   saveBtn.disabled = photos.length===0;
   emailBtn.disabled = photos.length===0;
+  if(whatsappBtn) whatsappBtn.disabled = photos.length===0;
   const smob = document.getElementById('saveBtnMobile');
   const emob = document.getElementById('emailBtnMobile');
+  const wmob = document.getElementById('whatsappBtnMobile');
   if(smob) smob.disabled = photos.length===0;
   if(emob) emob.disabled = photos.length===0;
+  if(wmob) wmob.disabled = photos.length===0;
 }
 
 function togglePreview(){
@@ -1174,42 +1188,16 @@ saveBtn.addEventListener('click', async ()=>{
   saveBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar .docx';
 });
 
-// ---- botão Enviar por email ----
-emailBtn.addEventListener('click', async ()=>{
-  emailBtn.disabled = true;
-  emailBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg> Gerando...';
-  try{
-    const nomeArquivo = getNomeArquivo();
-    const blob = await gerarBlob();
+// ---- botão Email — só abre o Outlook com campos preenchidos ----
+emailBtn.addEventListener('click', ()=>{
+  const assunto = encodeURIComponent(getAssuntoEmail());
+  const corpo = getCorpoEmail();
+  window.location.href = `mailto:?subject=${assunto}&body=${corpo}`;
+});
 
-    // 1. salvar o arquivo primeiro
-    if(window.showSaveFilePicker){
-      try{
-        const fileHandle = await window.showSaveFilePicker({
-          suggestedName: nomeArquivo,
-          types:[{description:'Documento Word', accept:{'application/vnd.openxmlformats-officedocument.wordprocessingml.document':['.docx']}}]
-        });
-        const writable = await fileHandle.createWritable();
-        await writable.write(blob);
-        await writable.close();
-      }catch(pickerErr){
-        if(pickerErr.name !== 'AbortError') baixarBlob(blob, nomeArquivo);
-      }
-    } else {
-      baixarBlob(blob, nomeArquivo);
-    }
-
-    // 2. abrir Outlook com campos preenchidos
-    const assunto = encodeURIComponent(getAssuntoEmail());
-    const corpo = getCorpoEmail();
-    window.location.href = `mailto:?subject=${assunto}&body=${corpo}`;
-
-  }catch(err){
-    alert('Erro: ' + err.message);
-    console.error(err);
-  }
-  emailBtn.disabled = false;
-  emailBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg> Enviar por email';
+// ---- botão WhatsApp — abre o WhatsApp sem texto ----
+whatsappBtn.addEventListener('click', ()=>{
+  window.open('https://wa.me/', '_blank');
 });
 
 
@@ -1218,6 +1206,7 @@ renderPhotoList();
 renderPreview();
 document.getElementById('saveBtnMobile').addEventListener('click', ()=>document.getElementById('saveBtn').click());
 document.getElementById('emailBtnMobile').addEventListener('click', ()=>document.getElementById('emailBtn').click());
+document.getElementById('whatsappBtnMobile').addEventListener('click', ()=>document.getElementById('whatsappBtn').click());
 document.getElementById('previewToggle').addEventListener('click', togglePreview);
 </script>
 <script>
