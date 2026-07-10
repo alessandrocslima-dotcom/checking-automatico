@@ -410,15 +410,13 @@ function renderFields(){
   profile.fields.forEach(label=>{
     const id = 'campo_' + slugify(label);
     const div = document.createElement('div');
-    div.className = 'field';
-    div.innerHTML = `<label for="${id}">${label}</label><input type="text" id="${id}" data-field="${label}">`;
+    div.innerHTML = `<label class="field-label" for="${id}">${label}</label><input type="text" class="field-input${label==='Data'?' mono':''}" id="${id}" data-field="${label}"${label==='Data'?' placeholder="DD/MM/AAAA"':''}>`;
     fieldsContainer.appendChild(div);
   });
   fieldsContainer.querySelectorAll('input').forEach(inp=>{
     inp.addEventListener('input', renderPreview);
     // Máscara automática DD/MM/AAAA no campo Data
     if(inp.dataset.field === 'Data'){
-      inp.setAttribute('placeholder', 'DD/MM/AAAA');
       inp.setAttribute('maxlength', '10');
       inp.addEventListener('keydown', function(e){
         // Permite backspace, delete, tab, setas — sem interferir
