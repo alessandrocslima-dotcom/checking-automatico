@@ -172,21 +172,19 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 .photo-thumb.dragging { opacity: .4; }
 .photo-thumb.drag-over { outline: 2px solid var(--accent); }
 
-/* Wrapper que faz o scale da página A4 no mobile */
-.a4-scale-wrap { width: 100%; display: flex; justify-content: center; flex-shrink: 0; }
-/* Página A4: sempre 540px de largura de design; transform:scale() faz o zoom-out no mobile */
-.a4-page { width: 540px; aspect-ratio: 210/297; background: var(--doc-bg); border-radius: 4px; box-shadow: 0 2px 12px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.04); position: relative; flex-shrink: 0; overflow: hidden; transform-origin: top center; }
-.a4-logo { position: absolute; top: 20px; }
-.a4-logo.pos-right { right: 24px; width: 110px; height: auto; }
-.a4-logo.pos-left { left: 32px; width: 90px; height: auto; }
-.a4-fields { position: absolute; left: 32px; font-size: 8px; line-height: 2; }
+.a4-page { width: 100%; max-width: 540px; background: var(--doc-bg); border-radius: 4px; box-shadow: 0 2px 12px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.04); position: relative; flex-shrink: 0; margin-bottom: 24px; overflow: hidden; }
+/* Elementos internos usam % da altura da página — escalam junto com a largura no mobile */
+.a4-logo { position: absolute; top: 2.7%; }
+.a4-logo.pos-right { right: 4.4%; width: 20%; height: auto; }
+.a4-logo.pos-left  { left: 5.9%; width: 16.5%; height: auto; }
+.a4-fields { position: absolute; left: 5.9%; font-size: 1.5%; line-height: 2; }
 .a4-fields b { margin-right: 3px; }
 .a4-fields .val { color: var(--text-dim); }
-.a4-footer-text { position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; font-size: 6px; color: var(--text-faint); line-height: 1.6; }
-.a4-footer-image { position: absolute; bottom: 18px; left: 32px; width: 200px; height: auto; }
-.a4-photo-slot { position: absolute; left: 32px; right: 32px; overflow: hidden; background: var(--bg-alt); display: flex; align-items: center; justify-content: center; }
+.a4-footer-text { position: absolute; bottom: 2.8%; left: 0; right: 0; text-align: center; font-size: 1.0%; color: var(--text-faint); line-height: 1.6; }
+.a4-footer-image { position: absolute; bottom: 2.6%; left: 5.9%; width: 37%; height: auto; }
+.a4-photo-slot { position: absolute; left: 5.9%; right: 5.9%; overflow: hidden; background: var(--bg-alt); display: flex; align-items: center; justify-content: center; }
 .a4-photo-slot img { width: 100%; height: 100%; object-fit: contain; }
-.a4-page-number { position: absolute; bottom: 6px; right: 10px; font-family: 'DM Mono', monospace; font-size: 7px; color: var(--text-faint); }
+.a4-page-number { position: absolute; bottom: 0.85%; right: 1.85%; font-family: 'DM Mono', monospace; font-size: 1.1%; color: var(--text-faint); }
 
 .field-input.mono { font-family: 'DM Mono', monospace; font-size: 12px; }
 .btn-docx:disabled, .btn-email:disabled { opacity: .5; cursor: not-allowed; }
@@ -313,7 +311,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         <button class="toolbar-btn">100%</button>
       </div>
     </div>
-    <div class="preview-canvas" id="preview-canvas-wrap"><div id="doc-empty" class="doc-page" style="width:540px;"><div class="doc-icon-wrap"><svg width="22" height="22" viewBox="0 0 14 14" fill="none"><path d="M2 10v2h10v-2M7 2v7M4.5 6.5L7 9l2.5-2.5" stroke="var(--accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></div><p class="doc-hint-title">Preencha os campos e arraste algumas fotos</p><p class="doc-hint-sub">as páginas aparecem aqui, ao vivo.</p></div><div id="preview-canvas" style="display:flex;flex-direction:column;align-items:center;width:100%;">
+    <div class="preview-canvas" id="preview-canvas-wrap"><div id="doc-empty" class="doc-page" style="width:100%;max-width:540px;"><div class="doc-icon-wrap"><svg width="22" height="22" viewBox="0 0 14 14" fill="none"><path d="M2 10v2h10v-2M7 2v7M4.5 6.5L7 9l2.5-2.5" stroke="var(--accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></div><p class="doc-hint-title">Preencha os campos e arraste algumas fotos</p><p class="doc-hint-sub">as páginas aparecem aqui, ao vivo.</p></div><div id="preview-canvas" style="display:flex;flex-direction:column;align-items:center;width:100%;">
       
       
     </div>
@@ -573,46 +571,6 @@ function selectCompany(company){
   renderPreview();
 }
 
-// ── Escala das páginas A4 no mobile ──────────────────────────
-// Cada .a4-page tem sempre 540px de largura de design (pixels fixos).
-// No mobile a tela é menor, então calculamos um fator de escala e
-// aplicamos transform:scale() no wrapper, fazendo "zoom-out" da página
-// inteira sem precisar recalcular posição de cada elemento interno.
-// O wrapper recebe height = alturaEscalada para que o scroll funcione.
-const PAGE_DESIGN_W = 540; // largura de design em px
-
-function scalePages(){
-  const wrap = document.getElementById('preview-canvas-wrap');
-  if(!wrap) return;
-  // Largura disponível no container (padding horizontal = 48px × 2)
-  const available = wrap.clientWidth - 96;
-  // Só escala se a tela for menor que o design; no desktop fica 1:1
-  const scale = available > 0 && available < PAGE_DESIGN_W
-    ? available / PAGE_DESIGN_W
-    : 1;
-
-  document.querySelectorAll('.a4-scale-wrap').forEach(sw => {
-    const page = sw.querySelector('.a4-page');
-    if(!page) return;
-    page.style.transform = scale < 1 ? `scale(${scale})` : '';
-    // Ajusta a altura do wrapper para que o scroll do container
-    // considere a altura real escalada (evita espaço em branco extra)
-    if(scale < 1){
-      const scaledH = page.getBoundingClientRect().height * scale;
-      sw.style.height = scaledH + 'px';
-    } else {
-      sw.style.height = '';
-    }
-  });
-}
-
-// Debounce no resize para não chamar a cada pixel
-let _scaleTimer = null;
-window.addEventListener('resize', () => {
-  clearTimeout(_scaleTimer);
-  _scaleTimer = setTimeout(scalePages, 80);
-});
-
 function switchTab(tab){
   const sidebar = document.querySelector('.sidebar');
   const main = document.querySelector('.main');
@@ -628,9 +586,6 @@ function switchTab(tab){
     if(main) main.classList.remove('hidden');
     if(tabForm) { tabForm.style.color='var(--text-dim)'; tabForm.style.borderBottom='none'; }
     if(tabPrev) { tabPrev.style.color='var(--text)'; tabPrev.style.borderBottom='2px solid var(--accent)'; }
-    // Recalcula escala toda vez que o Preview aparece
-    // (no mobile estava oculto com display:none, então clientWidth era 0)
-    requestAnimationFrame(scalePages);
   }
 }
 
@@ -722,17 +677,26 @@ function renderPreview(){
   for(let pageIdx=0; pageIdx<totalPages; pageIdx++){
     const page = document.createElement('div');
     page.className = 'a4-page';
-    // margin-bottom fica no .a4-scale-wrap (setado abaixo)
 
-    const logo = document.createElement('img');
-    logo.className = 'a4-logo pos-' + profile.logoPos;
+    // Altura da página: proporção A4 (297/210) × largura real disponível.
+    // No celular a tela é menor que 540px; calculamos via container.
+    const canvasW = pagesContainer.parentElement
+      ? Math.min(pagesContainer.parentElement.clientWidth - 96, 540)
+      : 540;
+    const pageH = Math.round(canvasW * (297 / 210));
+    page.style.height = pageH + 'px';
+
+    // Converte px de design (base pageH ≈ 764px a 540px de largura) para %
+    const pxToPct = px => (px / pageH * 100).toFixed(3) + '%';
+
+    const logo = document.createElement('img');    logo.className = 'a4-logo pos-' + profile.logoPos;
     logo.src = 'data:image/png;base64,' + profile.logoBase64;
     page.appendChild(logo);
 
     if(pageIdx===0){
       const fields = document.createElement('div');
       fields.className='a4-fields';
-      fields.style.top = profile.fieldsTopPx + 'px';
+      fields.style.top = pxToPct(profile.fieldsTopPx);
       fields.innerHTML = values.map(v=>
         `<div><b>${escapeHtml(v.label)}:</b><span class="val">${escapeHtml(v.value)}</span></div>`
       ).join('');
@@ -741,15 +705,15 @@ function renderPreview(){
 
     const pair = pairs[pageIdx] || [null,null];
     const topStart = pageIdx===0 ? profile.photoTopPage1Px : profile.photoTopOtherPx;
-    const slotH = pageIdx===0 ? 255 : 295;   // pagina 1 tem menos espaco livre (por causa do cabecalho)
+    const slotH = pageIdx===0 ? 255 : 295;
     const gap = 14;
 
     pair.forEach((foto, slotIdx)=>{
       if(!foto) return;
       const slot = document.createElement('div');
       slot.className='a4-photo-slot';
-      slot.style.top = (topStart + slotIdx*(slotH+gap)) + 'px';
-      slot.style.height = slotH + 'px';
+      slot.style.top    = pxToPct(topStart + slotIdx*(slotH+gap));
+      slot.style.height = pxToPct(slotH);
       const img = document.createElement('img');
       img.src = foto.previewDataUrl || foto.dataUrl;
       slot.appendChild(img);
@@ -773,16 +737,8 @@ function renderPreview(){
     pnum.textContent = 'pág. ' + (pageIdx+1);
     page.appendChild(pnum);
 
-    // Embrulha a página num wrapper que recebe o height escalado
-    const scaleWrap = document.createElement('div');
-    scaleWrap.className = 'a4-scale-wrap';
-    scaleWrap.style.marginBottom = '22px';
-    page.style.marginBottom = ''; // margin fica no wrapper agora
-    scaleWrap.appendChild(page);
-    pagesContainer.appendChild(scaleWrap);
+    pagesContainer.appendChild(page);
   }
-  // Aplica escala imediatamente após renderizar
-  requestAnimationFrame(scalePages);
 }
 
 function escapeHtml(s){
