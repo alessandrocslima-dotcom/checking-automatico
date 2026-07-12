@@ -704,9 +704,22 @@ function renderPreview(){
     }
 
     const pair = pairs[pageIdx] || [null,null];
-    const topStart = pageIdx===0 ? profile.photoTopPage1Px : profile.photoTopOtherPx;
-    const slotH = pageIdx===0 ? 255 : 295;
-    const gap = 14;
+
+    // Todos os valores abaixo são em % da altura da página (pageH).
+    // Isso garante que o layout escala corretamente em qualquer tamanho de tela.
+    // Os px originais foram calibrados para pageH≈764 (540px × 297/210).
+    const DESIGN_H = 764; // pageH de referência para conversão
+    const topStartPx      = pageIdx===0 ? profile.photoTopPage1Px : profile.photoTopOtherPx;
+    const footerReservePx = profile.footerType === 'image' ? 65 : 55;
+    const gapPx           = 14;
+
+    // Converte tudo para px reais na página atual
+    const topStart      = Math.round(topStartPx      / DESIGN_H * pageH);
+    const footerReserve = Math.round(footerReservePx / DESIGN_H * pageH);
+    const gap           = Math.round(gapPx           / DESIGN_H * pageH);
+
+    // slotH calculado dinamicamente: divide espaço disponível em 2 slots iguais
+    const slotH = Math.floor((pageH - topStart - footerReserve - gap) / 2);
 
     pair.forEach((foto, slotIdx)=>{
       if(!foto) return;
