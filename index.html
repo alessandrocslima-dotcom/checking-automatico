@@ -295,12 +295,12 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </div>
 
     <div class="sidebar-footer">
-      <p>Desenvolvido por <strong>Alessandro Lima</strong><br>© 2026 · Todos os direitos reservados · <code>v1.3.0</code></p>
+      <p>Desenvolvido por <strong>Alessandro Lima</strong><br>© 2026 · Todos os direitos reservados · <code>v1.3.1</code></p>
     </div>
   </aside>
 
   <!-- Main preview -->
-  <main class="main" id="main-panel" id="main-panel">
+  <main class="main" id="main-panel">
     <div class="toolbar">
       <div class="toolbar-left" id="toolbar-left">
         <span class="toolbar-title">Pré-visualização</span><div class="toolbar-divider"></div><span class="toolbar-pages" id="toolbar-pages">0 páginas</span>
@@ -354,63 +354,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   </div>
 </div>
 </div>
-
-<script>
-  // ── Theme ──
-  const themes = ['dark','light','rose'];
-  const themeLabels = { dark: 'Claro', light: 'Rosa', rose: 'Escuro' };
-  let currentTheme = 0;
-
-  function cycleTheme() {
-    currentTheme = (currentTheme + 1) % 3;
-    document.body.className = 'theme-' + themes[currentTheme];
-    document.getElementById('theme-label').textContent = themeLabels[themes[currentTheme]];
-  }
-
-  // ── Company ──
-  function selectCompany(c) {
-    document.getElementById('btn-vivere').className = 'company-btn ' + (c==='vivere'?'active':'inactive');
-    document.getElementById('btn-inter').className = 'company-btn ' + (c==='inter'?'active':'inactive');
-  }
-
-  // ── Mobile tabs ──
-  let activeTab = 'form';
-  function switchTab(tab) {
-    activeTab = tab;
-    const sidebar = document.getElementById('sidebar');
-    const main = document.getElementById('main-panel');
-    const tabForm = document.getElementById('tab-form');
-    const tabPrev = document.getElementById('tab-preview');
-    const accent = getComputedStyle(document.body).getPropertyValue('--accent').trim();
-    const dim = getComputedStyle(document.body).getPropertyValue('--text-dim').trim();
-
-    if (tab === 'form') {
-      sidebar.classList.remove('hidden');
-      main.classList.add('hidden');
-      tabForm.style.color = accent;
-      tabForm.style.borderBottom = '2px solid ' + accent;
-      tabPrev.style.color = dim;
-      tabPrev.style.borderBottom = '2px solid transparent';
-    } else {
-      sidebar.classList.add('hidden');
-      main.classList.remove('hidden');
-      tabPrev.style.color = accent;
-      tabPrev.style.borderBottom = '2px solid ' + accent;
-      tabForm.style.color = dim;
-      tabForm.style.borderBottom = '2px solid transparent';
-    }
-  }
-  // Init tab styles
-  switchTab('form');
-
-  // ── Drag & drop zone ──
-  const uploadZone = document.querySelector('.upload-zone');
-  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.style.borderColor = 'var(--accent)'; });
-  uploadZone.addEventListener('dragleave', () => { uploadZone.style.borderColor = ''; });
-  uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.style.borderColor = ''; });
-</script>
-
-
 
 <script>
 
@@ -513,6 +456,7 @@ dropzone.addEventListener('drop', e=>{
 fileInput.addEventListener('change', e=>handleFiles(e.target.files));
 
 const MAX_DIM_PX = 1600; // resolucao maxima (mais que suficiente pra um documento)
+const PREVIEW_MAX_DIM_PX = 800; // resolucao reduzida so pra tela (evita estourar memoria de imagem no celular)
 
 function handleFiles(fileListRaw){
   const files = Array.from(fileListRaw).filter(f=>f.type.startsWith('image/') || /\.(heic|heif)$/i.test(f.name));
@@ -544,8 +488,29 @@ function handleFiles(fileListRaw){
         ctx.drawImage(img, 0, 0, w, h);
         const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.85);
 
+        // Versao reduzida, so para a pre-visualizacao em tela — evita que o
+        // navegador (principalmente no celular) estoure memoria decodificando
+        // varias imagens grandes ao mesmo tempo. O .docx final sempre usa a
+        // versao em resolucao completa (jpegDataUrl acima), essa reducao nao
+        // afeta o documento gerado.
+        let pw = w, ph = h;
+        if(pw > PREVIEW_MAX_DIM_PX || ph > PREVIEW_MAX_DIM_PX){
+          const pscale = Math.min(PREVIEW_MAX_DIM_PX/pw, PREVIEW_MAX_DIM_PX/ph);
+          pw = Math.round(pw*pscale);
+          ph = Math.round(ph*pscale);
+        }
+        let previewDataUrl = jpegDataUrl;
+        if(pw !== w || ph !== h){
+          const pcanvas = document.createElement('canvas');
+          pcanvas.width = pw; pcanvas.height = ph;
+          const pctx = pcanvas.getContext('2d');
+          pctx.drawImage(canvas, 0, 0, pw, ph);
+          previewDataUrl = pcanvas.toDataURL('image/jpeg', 0.6);
+        }
+
         photos.push({
           dataUrl: jpegDataUrl,
+          previewDataUrl: previewDataUrl,
           mime: 'image/jpeg',
           w: w,
           h: h,
@@ -632,7 +597,7 @@ function renderPhotoList(){
     div.className = 'photo-thumb' + (idx>=MAX_FOTOS ? ' excess' : '');
     div.dataset.idx = idx;
     div.innerHTML = `<div class="thumb-img">
-        <img src="${p.dataUrl}" alt="">
+        <img src="${p.previewDataUrl || p.dataUrl}" alt="">
         <span class="idx">${idx+1}</span>
       </div>
       <button class="rm" data-idx="${idx}" title="Remover">×</button>`;
@@ -740,7 +705,7 @@ function renderPreview(){
       slot.style.top = (topStart + slotIdx*(slotH+gap)) + 'px';
       slot.style.height = slotH + 'px';
       const img = document.createElement('img');
-      img.src = foto.dataUrl;
+      img.src = foto.previewDataUrl || foto.dataUrl;
       slot.appendChild(img);
       page.appendChild(slot);
     });
