@@ -3,7 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="theme-color" content="#0DD9C4">
-<script>(function(){var t=localStorage.getItem('checking_tema')||'light';if(t!=='light')document.documentElement.className='theme-init-'+t;})();</script>
+<script>(function(){
+  var t=localStorage.getItem('checking_tema')||'light';
+  // Bloqueia transições CSS durante a inicialização para evitar flash de cor
+  document.documentElement.style.setProperty('--transition-block','none');
+  if(t!=='light') document.documentElement.className='theme-init-'+t;
+  // Libera transições após o primeiro frame pintado
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    document.documentElement.style.removeProperty('--transition-block');
+  });});
+})();</script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -35,6 +44,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
   html.theme-init-dark { background: #0F1421; }
   html.theme-init-rose { background: #FDF5F6; }
+  /* Bloqueia transições de cor durante init para evitar flash */
+  html:not([style*='--transition-block']) * { }
+  html[style*='--transition-block'] *, html[style*='--transition-block'] *::before, html[style*='--transition-block'] *::after { transition: none !important; }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; font-family: 'DM Sans', sans-serif; }
   a { color: #0DD9C4; }
@@ -296,7 +308,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </div>
 
     <div class="sidebar-footer">
-      <p>Desenvolvido por <strong>Alessandro Lima</strong><br>© 2026 · Todos os direitos reservados · <code>v1.3.2</code></p>
+      <p>Desenvolvido por <strong>Alessandro Lima</strong><br>© 2026 · Todos os direitos reservados · <code>v1.3.3</code></p>
     </div>
   </aside>
 
@@ -1031,8 +1043,10 @@ function baixarBlob(blob, nomeArquivo){
 
 // ---- botão Salvar .docx ----
 saveBtn.addEventListener('click', async ()=>{
+  const _origHTML = saveBtn.innerHTML;
   saveBtn.disabled = true;
   saveBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Gerando...';
+  let salvou = false;
   try{
     const nomeArquivo = getNomeArquivo();
     const blob = await gerarBlob();
@@ -1047,21 +1061,29 @@ saveBtn.addEventListener('click', async ()=>{
         const writable = await fileHandle.createWritable();
         await writable.write(blob);
         await writable.close();
+        salvou = true;
       }catch(pickerErr){
-        if(pickerErr.name !== 'AbortError') baixarBlob(blob, nomeArquivo);
+        // AbortError = usuário cancelou — não mostra toast nem erro
+        if(pickerErr.name !== 'AbortError'){
+          baixarBlob(blob, nomeArquivo);
+          salvou = true;
+        }
       }
     } else {
       // fallback: Downloads normal
       baixarBlob(blob, nomeArquivo);
+      salvou = true;
     }
   }catch(err){
     alert('Erro ao gerar o documento: ' + err.message);
     console.error(err);
+  } finally {
+    // Restaura o botão SEMPRE: sucesso, erro ou cancelamento
+    saveBtn.innerHTML = _origHTML;
+    saveBtn.disabled = photos.length === 0;
+    if(salvou) showToast('Checking salvo! Bom trabalho, produtor. 🎉', '✅');
   }
-  saveBtn.innerHTML = originalHTML;
-  saveBtn.disabled = false;
-  showToast('Checking salvo! Bom trabalho, produtor. 🎉', '✅');
-});;
+});
 
 // ---- botão Email — só abre o Outlook com campos preenchidos ----
 emailBtn.addEventListener('click', ()=>{
